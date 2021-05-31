@@ -30,7 +30,6 @@ function refreshWheatherBlockingMask() {
   weatherBlockDrawings.forEach(drawing => {
     let p = new PIXI.Polygon(adjustPolygonPoints(drawing));
     g.beginHole().drawPolygon(p).endHole();
-    weatherMaskContainer.addChild(g);
   });
   canvas.effects.mask = g;
   g.name = "weatherBlock";
