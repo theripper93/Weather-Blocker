@@ -31,6 +31,11 @@ function refreshWheatherBlockingMask() {
     let p = new PIXI.Polygon(adjustPolygonPoints(drawing));
     g.beginHole().drawPolygon(p).endHole();
   });
+  canvas.foreground.placeables.forEach((t)=>{
+    if(t.roomPoly && (t.occluded || t.alpha == 0 || (canvas.tokens.controlled[0] && t.roomPoly.contains(canvas.tokens.controlled[0].center.x,canvas.tokens.controlled[0].center.y)))){
+      g.beginHole().drawPolygon(t.roomPoly).endHole();
+    }
+  })
   canvas.effects.mask = g;
   g.name = "weatherBlock";
   canvas.effects.children.forEach((c) => {
