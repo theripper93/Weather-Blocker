@@ -8,8 +8,4 @@ Just create a drawing(Only Polygons are supported), in the text field type "bloc
 
 If you have Bette Roofs installed, you can enable the "Weather Blocker Integration" in the Better Roofs settings to hide weather inside buildings
 
-**Known Issues**
-
-Conflict with Perfect Vision
-
 ![alt-link](https://github.com/theripper93/Weather-Blocker/raw/main/wiki/blockweather.png)
