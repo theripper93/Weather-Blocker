@@ -21,6 +21,10 @@ Hooks.on("deleteDrawing", () => {
   refreshWheatherBlockingMask();
 });
 
+Hooks.on("canvasInit", () => {
+  canvas.effects.mask = null;
+});
+
 function refreshWheatherBlockingMask(sight = false) {
   if (sight && !_wbIsMaskInverted) {
     let _oldOccludedTilesState = _occludedTilesState;
