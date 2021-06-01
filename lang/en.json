@@ -1,3 +1,4 @@
 {
-    "showWalls.tools.toggle.hint": "Show Walls Everywhere"
+    "weatherblock.sceneconfig.invertMask.name": "Invert Weather Block",
+    "weatherblock.sceneconfig.invertMask.hint": "Instead of blocking weather in the designated polygons, only show the weather in the polygons"
 }
