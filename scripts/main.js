@@ -43,14 +43,26 @@ function refreshWheatherBlockingMask(sight = false) {
   );
   function adjustPolygonPoints(drawing) {
     let globalPoints = [];
-    drawing.data.points.forEach((p) => {
-      globalPoints.push(p[0] + drawing.x, p[1] + drawing.y);
-    });
+    if (drawing.data.points.length != 0) {
+      drawing.data.points.forEach((p) => {
+        globalPoints.push(p[0] + drawing.x, p[1] + drawing.y);
+      });
+    } else {
+      globalPoints = [
+        drawing.x,
+        drawing.y,
+        drawing.x + drawing.width,
+        drawing.y,
+        drawing.x + drawing.width,
+        drawing.y + drawing.height,
+        drawing.x,
+        drawing.y + drawing.height,
+      ];
+    }
     return globalPoints;
   }
   let weatherBlockDrawings = canvas.drawings.placeables.filter(
-    (d) => d.data.text == "blockWeather" && d.data.points.length != 0
-  );
+    (d) => d.data.text == "blockWeather");
   weatherBlockDrawings.forEach((drawing) => {
     let p = new PIXI.Polygon(adjustPolygonPoints(drawing));
     if (!_wbIsMaskInverted){
