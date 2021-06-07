@@ -94,6 +94,13 @@ function refreshWheatherBlockingMask(sight = false) {
     if (c.name == "weatherBlock") c.destroy();
   });
   canvas.effects.addChild(g);
+  if(canvas.fxmaster.weather){
+    canvas.fxmaster.weather.mask = g;
+    canvas.fxmaster.weather.children.forEach((c) => {
+    if (c.name == "weatherBlock") c.destroy();
+  });
+  canvas.fxmaster.weather.addChild(g);
+  }
 }
 
 /******************
