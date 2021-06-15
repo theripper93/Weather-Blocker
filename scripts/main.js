@@ -32,7 +32,7 @@ function refreshWheatherBlockingMask(sight = false) {
     let _oldOccludedTilesState = _occludedTilesState;
     _occludedTilesState = "";
     canvas.foreground.placeables.forEach((t) => {
-      if (t.roomPoly)
+      if (t.roomPoly && t.occluded)
         _occludedTilesState += t.roomPoly.contains(
           canvas.tokens.controlled[0].center.x,
           canvas.tokens.controlled[0].center.y
