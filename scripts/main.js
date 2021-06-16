@@ -9,6 +9,7 @@ Hooks.on("canvasReady", () => {
   );
   weatherBlockIsLevels = game.modules.get("levels")?.active;
   refreshWheatherBlockingMask();
+  setTimeout(function(){refreshWheatherBlockingMask(); }, 5000);
 });
 
 Hooks.on("createDrawing", () => {
@@ -110,12 +111,12 @@ function refreshWheatherBlockingMask(sight = false) {
     if (c.name == "weatherBlock") c.destroy();
   });
   canvas.effects.addChild(g);
-  if (canvas.fxmaster.weather) {
-    canvas.fxmaster.weather.mask = g;
-    canvas.fxmaster.weather.children.forEach((c) => {
+  if (canvas.fxmaster) {
+    canvas.fxmaster.mask = g;
+    canvas.fxmaster.children.forEach((c) => {
       if (c.name == "weatherBlock") c.destroy();
     });
-    canvas.fxmaster.weather.addChild(g);
+    canvas.fxmaster.addChild(g);
   }
 }
 
