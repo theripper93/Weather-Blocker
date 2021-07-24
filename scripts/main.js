@@ -1,3 +1,4 @@
+let _weatherBlock = {};
 let _occludedTilesState = "";
 let weatherBlockIsLevels
 const _weatherBlockModuleName = "weatherblock";
@@ -29,6 +30,10 @@ Hooks.on("canvasInit", () => {
 });
 
 function refreshWheatherBlockingMask(sight = false) {
+  _weatherBlock.refreshMask(sight);
+}
+
+_weatherBlock.refreshMask = function(sight = false) {
   if (sight && !_wbIsMaskInverted) {
     let _oldOccludedTilesState = _occludedTilesState;
     _occludedTilesState = "";
@@ -43,8 +48,12 @@ function refreshWheatherBlockingMask(sight = false) {
     });
     if (_occludedTilesState == _oldOccludedTilesState) return;
   }
+  _weatherBlock.updateMask();
+}
+
+_weatherBlock.createMask = function(inverted = false) {
   let g = new PIXI.Graphics();
-  if (!_wbIsMaskInverted)
+  if (!inverted)
     g.beginFill(0x000000).drawRect(
       0,
       0,
@@ -76,13 +85,13 @@ function refreshWheatherBlockingMask(sight = false) {
   );
   weatherBlockDrawings.forEach((drawing) => {
     let p = new PIXI.Polygon(adjustPolygonPoints(drawing));
-    if (!_wbIsMaskInverted) {
+    if (!inverted) {
       g.beginHole().drawPolygon(p).endHole();
     } else {
-      g.beginFill().drawPolygon(p).endFill();
+      g.beginFill(0x000000).drawPolygon(p).endFill();
     }
   });
-  if (!_wbIsMaskInverted) {
+  if (!inverted) {
     canvas.foreground.placeables.forEach((t) => {
       if (
         t.roomPoly &&
@@ -105,6 +114,11 @@ function refreshWheatherBlockingMask(sight = false) {
       }
     });
   }
+  return g;
+}
+
+_weatherBlock.updateMask = function() {
+  let g = _weatherBlock.createMask(_wbIsMaskInverted);
   canvas.effects.mask = g;
   g.name = "weatherBlock";
   canvas.effects.children.forEach((c) => {
