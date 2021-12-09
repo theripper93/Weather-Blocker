@@ -26,7 +26,7 @@ Hooks.on("deleteDrawing", () => {
 });
 
 Hooks.on("canvasInit", () => {
-  canvas.effects.mask = null;
+  canvas.weather.mask = null;
 });
 
 function refreshWheatherBlockingMask(sight = false) {
@@ -52,7 +52,7 @@ _weatherBlock.refreshMask = function(sight = false) {
 }
 
 _weatherBlock.createMask = function(inverted = false) {
-  let g = new PIXI.Graphics();
+  let g = new PIXI.LegacyGraphics();
   if (!inverted)
     g.beginFill(0x000000).drawRect(
       0,
@@ -119,12 +119,12 @@ _weatherBlock.createMask = function(inverted = false) {
 
 _weatherBlock.updateMask = function() {
   let g = _weatherBlock.createMask(_wbIsMaskInverted);
-  canvas.effects.mask = g;
+  canvas.weather.mask = g;
   g.name = "weatherBlock";
-  canvas.effects.children.forEach((c) => {
+  canvas.weather.children.forEach((c) => {
     if (c.name == "weatherBlock") c.destroy();
   });
-  canvas.effects.addChild(g);
+  canvas.weather.addChild(g);
   if (canvas.fxmaster) {
     canvas.fxmaster.mask = g;
     canvas.fxmaster.children.forEach((c) => {
