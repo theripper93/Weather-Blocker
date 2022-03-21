@@ -5,6 +5,7 @@ class WeatherBlocker {
     this.isLevels = game.modules.get("levels")?.active;
     this.mask = new PIXI.LegacyGraphics();
     this.mask.name = WeatherBlocker.moduleName;
+    this.requestUpdate = debounce(this.needUpdate, 100);
   }
 
   static get moduleName(){
@@ -44,6 +45,7 @@ class WeatherBlocker {
   }
 
   refreshMask(){
+    if(!this.mask || this.mask._destroyed) this.setMask(); 
     this.mask.clear();
 
     if (!this.inverted) this.mask.beginFill(0x000000).drawRect(0,0,canvas.scene.dimensions.width,canvas.scene.dimensions.height);
@@ -83,6 +85,8 @@ class WeatherBlocker {
   }
 
   setMask(){
+    this.mask = new PIXI.LegacyGraphics();
+    this.mask.name = WeatherBlocker.moduleName;
     canvas.weather.mask = this.mask;
     canvas.weather.children.forEach((c) => {
       if (c.name == WeatherBlocker.moduleName) canvas.weather.removeChild(c);
@@ -108,22 +112,47 @@ class WeatherBlocker {
     })
 
     Hooks.on("createDrawing", () => {
-      game.WeatherBlocker.maskNeedsUpdate = true;
+      game.WeatherBlocker.requestUpdate();
     });
     
     Hooks.on("updateDrawing", () => {
-      game.WeatherBlocker.maskNeedsUpdate = true;
+      game.WeatherBlocker.requestUpdate();
     });
     
     Hooks.on("deleteDrawing", () => {
-      game.WeatherBlocker.maskNeedsUpdate = true;
+      game.WeatherBlocker.requestUpdate();
+    });
+
+    Hooks.on("createTile", () => {
+      if(!game.WeatherBlocker.integration) return;
+      game.WeatherBlocker.requestUpdate();
+    });
+    
+    Hooks.on("updateTile", () => {
+      if(!game.WeatherBlocker.integration) return;
+      game.WeatherBlocker.requestUpdate();
+    });
+    
+    Hooks.on("deleteTile", () => {
+      if(!game.WeatherBlocker.integration) return;
+      game.WeatherBlocker.requestUpdate();
     });
 
     Hooks.on("updateToken",(token,updates)=>{
-      if(!game.WeatherBlocker.isLevels) return;
+      if(!game.WeatherBlocker.integration) return;
       if("elevation" in updates || "x" in updates || "y" in updates){
-        game.WeatherBlocker.maskNeedsUpdate = true;
+        game.WeatherBlocker.requestUpdate();
       }
+    })
+
+    Hooks.on("controlToken", ()=>{
+      if(!game.WeatherBlocker.integration) return;
+      game.WeatherBlocker.requestUpdate();
+    })
+
+    Hooks.on("sightRefresh", ()=>{
+      if(!game.WeatherBlocker.integration) return;
+      game.WeatherBlocker.requestUpdate();
     })
 
   }
@@ -149,8 +178,13 @@ class WeatherBlocker {
     return globalPoints;
   }
 
+  needUpdate(){
+    this.maskNeedsUpdate = true;
+  }
+
   isWeatherBlocking(drawing){
-    return drawing.data.text == "blockWeather";
+    const flag = drawing.document.getFlag(WeatherBlocker.moduleName, "blockWeather") || false;
+    return flag || drawing.data.text == "blockWeather";
   }
 
 }

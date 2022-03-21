@@ -1,4 +1,5 @@
 {
     "weatherblock.sceneconfig.invertMask.name": "Invert Weather Block",
-    "weatherblock.sceneconfig.invertMask.hint": "Instead of blocking weather in the designated polygons, only show the weather in the polygons"
+    "weatherblock.sceneconfig.invertMask.hint": "Instead of blocking weather in the designated polygons, only show the weather in the polygons",
+    "weatherblock.drawingconfig.blockWeather.name": "Block Weather"
 }
