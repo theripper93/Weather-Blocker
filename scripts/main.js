@@ -163,3 +163,7 @@ Hooks.on("init", () => {
 Hooks.on("ready", () => {
   game.WeatherBlocker.setTicker();
 })
+
+
+//Legacy compatibility
+function refreshWheatherBlockingMask(){};
