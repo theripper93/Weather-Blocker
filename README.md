@@ -5,9 +5,15 @@
 
 Block weather effects through drawings
 
-Just create a drawing(Only Polygons and Rectangles are supported), in the text field type "blockWeather" (no quotes)
+Just create a drawing(Only Polygons and Rectangles are supported), in the drawing configuration enable weather blocking
 
-If you have Bette Roofs installed, you can enable the "Weather Blocker Integration" in the Better Roofs settings to hide weather inside buildings
+![image](https://user-images.githubusercontent.com/1346839/159341144-f9029ce4-4845-46ae-89ea-c2e9303092b2.png)
+
+If you have Bette Roofs installed, you can enable the "Weather Blocker Integration" in the Better Roofs settings to hide weather inside buildings. If levels is also enabled the weather will be blocked (or not) depending if you are under or on top of a roof
+
+**Levels Integration**
+
+If you use Levels as well, weather blocking drawings will respect the Top\Bottom set with Levels in the drawing configuration
 
 **Inverted Mode**
 
