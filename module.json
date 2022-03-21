@@ -18,7 +18,8 @@
         }
     ],
     "scripts": [
-        "./scripts/main.js"
+        "./scripts/main.js",
+        "./scripts/config.js"
     ],
     "minimumCoreVersion": "9",
     "compatibleCoreVersion": "9",

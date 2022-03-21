@@ -1,66 +1,134 @@
-let _weatherBlock = {};
-let _occludedTilesState = "";
-let weatherBlockIsLevels
-const _weatherBlockModuleName = "weatherblock";
-let _wbIsMaskInverted = false;
-Hooks.on("canvasReady", () => {
-  _wbIsMaskInverted = canvas.scene.getFlag(
-    _weatherBlockModuleName,
-    "invertMask"
-  );
-  weatherBlockIsLevels = game.modules.get("levels")?.active;
-  refreshWheatherBlockingMask();
-  setTimeout(function(){refreshWheatherBlockingMask(); }, 5000);
-});
-
-Hooks.on("createDrawing", () => {
-  refreshWheatherBlockingMask();
-});
-
-Hooks.on("updateDrawing", () => {
-  refreshWheatherBlockingMask();
-});
-
-Hooks.on("deleteDrawing", () => {
-  refreshWheatherBlockingMask();
-});
-
-Hooks.on("canvasInit", () => {
-  canvas.weather.mask = null;
-});
-
-function refreshWheatherBlockingMask(sight = false) {
-  _weatherBlock.refreshMask(sight);
-}
-
-_weatherBlock.refreshMask = function(sight = false) {
-  if (sight && !_wbIsMaskInverted) {
-    let _oldOccludedTilesState = _occludedTilesState;
-    _occludedTilesState = "";
-    canvas.foreground.placeables.forEach((t) => {
-      if (t.roomPoly && t.occluded)
-        _occludedTilesState += t.roomPoly.contains(
-          canvas.tokens.controlled[0].center.x,
-          canvas.tokens.controlled[0].center.y
-        )
-          ? "t"
-          : "f";
-    });
-    if (_occludedTilesState == _oldOccludedTilesState) return;
+class WeatherBlocker {
+  constructor(){
+    this.maskNeedsUpdate = false;
+    this.autoMask = true;
+    this.isLevels = game.modules.get("levels")?.active;
+    this.mask = new PIXI.LegacyGraphics();
+    this.mask.name = WeatherBlocker.moduleName;
   }
-  _weatherBlock.updateMask();
-}
 
-_weatherBlock.createMask = function(inverted = false) {
-  let g = new PIXI.LegacyGraphics();
-  if (!inverted)
-    g.beginFill(0x000000).drawRect(
-      0,
-      0,
-      canvas.scene.dimensions.width,
-      canvas.scene.dimensions.height
-    );
-  function adjustPolygonPoints(drawing) {
+  static get moduleName(){
+    return "weatherblock";
+  }
+
+  get drawings(){
+    if(this.isLevels && this.token){
+      return canvas.drawings.placeables.filter((d) => this.isWeatherBlocking(d) && _levels.isTokenInRange(this.token, d));
+    }
+    return canvas.drawings.placeables.filter((d) => this.isWeatherBlocking(d));
+  }
+
+  get token(){
+    return canvas.tokens.controlled[0] ?? _levels.lastReleasedToken;
+  }
+
+  get integration(){
+    if(!game.modules.get("betterroofs")?.active) return false;
+    return game.settings.get("betterroofs", "wbIntegration")
+  }
+
+  setTicker(){
+    canvas.app.ticker.add(game.WeatherBlocker.refresh);
+  }
+
+  initScene(){
+    this.refreshMask();
+    this.setMask();
+    this.maskNeedsUpdate = true;
+  }
+
+  refresh(){
+    if(!game.WeatherBlocker.maskNeedsUpdate) return;
+    game.WeatherBlocker.maskNeedsUpdate = false;
+    setTimeout(() => { game.WeatherBlocker.refreshMask(); }, 100);
+  }
+
+  refreshMask(){
+    this.mask.clear();
+
+    if (!this.inverted) this.mask.beginFill(0x000000).drawRect(0,0,canvas.scene.dimensions.width,canvas.scene.dimensions.height);
+    
+    const polygons = this.getPolygons();
+
+    for(let p of polygons){
+      if (!this.inverted) {
+        this.mask.beginHole().drawPolygon(p).endHole();
+      } else {
+        this.mask.beginFill(0x000000).drawPolygon(p).endFill();
+      }
+    }
+  }
+
+  getPolygons(){
+    const drawings = game.WeatherBlocker.drawings.map((d) => new PIXI.Polygon(this.adjustPolygonPoints(d)));
+    if(this.inverted || !this.integration) return drawings;
+    const rooms = [];
+    for(let tile of canvas.foreground.placeables){
+      if(this.roomFilter(tile)) rooms.push(tile.roomPoly);
+    }
+    return [...drawings, ...rooms];
+  }
+
+  roomFilter(tile){
+    if(!tile.roomPoly) return false;
+    const token = this.token
+    const center = token ? new PIXI.Point(token.data.x+token.w/2,token.data.y+token.h/2) : new PIXI.Point(0,0);
+    const tokenInTile = token && tile.roomPoly.contains(center.x, center.y)
+    if(!tile.occluded && tile.alpha !== 0 && !tokenInTile) return false;
+    if(!this.integration) return true;
+
+    const { rangeBottom, rangeTop } = _levels.getFlagsForObject(tile);
+    const underRoof = rangeTop == Infinity && token && token.data.elevation < rangeBottom
+    return underRoof 
+  }
+
+  setMask(){
+    canvas.weather.mask = this.mask;
+    canvas.weather.children.forEach((c) => {
+      if (c.name == WeatherBlocker.moduleName) canvas.weather.removeChild(c);
+    });
+    canvas.weather.addChild(this.mask);
+    if (canvas.fxmaster) {
+      canvas.fxmaster.mask = this.mask;
+      canvas.fxmaster.children.forEach((c) => {
+        if (c.name == WeatherBlocker.moduleName) canvas.fxmaster.removeChild(c);
+      });
+      canvas.fxmaster.addChild(this.mask);
+    }
+  }
+
+  setHooks(){
+
+    Hooks.on("canvasInit", () => {
+      canvas.weather.mask = null;
+    });
+
+    Hooks.on("canvasReady", () => {
+      game.WeatherBlocker.initScene();
+    })
+
+    Hooks.on("createDrawing", () => {
+      game.WeatherBlocker.maskNeedsUpdate = true;
+    });
+    
+    Hooks.on("updateDrawing", () => {
+      game.WeatherBlocker.maskNeedsUpdate = true;
+    });
+    
+    Hooks.on("deleteDrawing", () => {
+      game.WeatherBlocker.maskNeedsUpdate = true;
+    });
+
+    Hooks.on("updateToken",(token,updates)=>{
+      if(!game.WeatherBlocker.isLevels) return;
+      if("elevation" in updates || "x" in updates || "y" in updates){
+        game.WeatherBlocker.maskNeedsUpdate = true;
+      }
+    })
+
+  }
+
+  adjustPolygonPoints(drawing) {
     let globalPoints = [];
     if (drawing.data.points.length != 0) {
       drawing.data.points.forEach((p) => {
@@ -80,105 +148,18 @@ _weatherBlock.createMask = function(inverted = false) {
     }
     return globalPoints;
   }
-  let weatherBlockDrawings = canvas.drawings.placeables.filter(
-    (d) => d.data.text == "blockWeather"
-  );
-  weatherBlockDrawings.forEach((drawing) => {
-    let p = new PIXI.Polygon(adjustPolygonPoints(drawing));
-    if (!inverted) {
-      g.beginHole().drawPolygon(p).endHole();
-    } else {
-      g.beginFill(0x000000).drawPolygon(p).endFill();
-    }
-  });
-  if (!inverted) {
-    canvas.foreground.placeables.forEach((t) => {
-      if (
-        t.roomPoly &&
-        (t.occluded ||
-          t.alpha == 0 ||
-          (canvas.tokens.controlled[0] &&
-            t.roomPoly.contains(
-              canvas.tokens.controlled[0].center.x,
-              canvas.tokens.controlled[0].center.y
-            )))
-      ) {
-        if (weatherBlockIsLevels) {
-          let { rangeBottom, rangeTop } = _levels.getFlagsForObject(t);
-          if (rangeTop == Infinity && canvas.tokens.controlled[0] && canvas.tokens.controlled[0].data.elevation < rangeBottom) {
-            g.beginHole().drawPolygon(t.roomPoly).endHole();
-          }
-        } else {
-          g.beginHole().drawPolygon(t.roomPoly).endHole();
-        }
-      }
-    });
+
+  isWeatherBlocking(drawing){
+    return drawing.data.text == "blockWeather";
   }
-  return g;
+
 }
 
-_weatherBlock.updateMask = function() {
-  let g = _weatherBlock.createMask(_wbIsMaskInverted);
-  canvas.weather.mask = g;
-  g.name = "weatherBlock";
-  canvas.weather.children.forEach((c) => {
-    if (c.name == "weatherBlock") c.destroy();
-  });
-  canvas.weather.addChild(g);
-  if (canvas.fxmaster) {
-    canvas.fxmaster.mask = g;
-    canvas.fxmaster.children.forEach((c) => {
-      if (c.name == "weatherBlock") c.destroy();
-    });
-    canvas.fxmaster.addChild(g);
-  }
-}
-
-Hooks.on("updateToken",(token,updates)=>{
-  if("elevation" in updates && weatherBlockIsLevels){
-    _occludedTilesState="" 
-  }
-})
-
-/******************
- * SCENE SETTINGS *
- ******************/
-
-Hooks.on("renderSceneConfig", (app, html, data) => {
-  let invertMask =
-    app.object.getFlag(_weatherBlockModuleName, "invertMask") || false;
-
-  const wbhtml = `
-    <div class="form-group">
-        <label>${game.i18n.localize(
-          "weatherblock.sceneconfig.invertMask.name"
-        )}</label>
-        <input id="invertMask" type="checkbox" name="invertMask" data-dtype="Boolean" ${
-          invertMask ? "checked" : ""
-        }>
-        <p class="notes">${game.i18n.localize(
-          "weatherblock.sceneconfig.invertMask.hint"
-        )}</p>
-    </div>
-    `;
-  const weatherFind = html.find("select[name ='weather']");
-  const formGroup = weatherFind.closest(".form-group");
-  formGroup.after(wbhtml);
-  html
-    .find($('button[name="submit"]'))
-    .click(app.object, _weatherBlockerSaveSceneConfig);
+Hooks.on("init", () => {
+  game.WeatherBlocker = new WeatherBlocker();
+  game.WeatherBlocker.setHooks();
 });
 
-/***********************
- * SAVE SCENE SETTINGS *
- ***********************/
-
-async function _weatherBlockerSaveSceneConfig(event) {
-  let html = this.parentElement;
-  await event.data.setFlag(
-    _weatherBlockModuleName,
-    "invertMask",
-    html.querySelectorAll("input[name ='invertMask']")[0].checked
-  );
-  _wbIsMaskInverted = event.data.getFlag(_weatherBlockModuleName, "invertMask");
-}
+Hooks.on("ready", () => {
+  game.WeatherBlocker.setTicker();
+})
