@@ -19,6 +19,10 @@ class WeatherBlocker {
     return canvas.drawings.placeables.filter((d) => this.isWeatherBlocking(d));
   }
 
+  get inverted(){
+    return canvas.scene.getFlag(WeatherBlocker.moduleName, "invertMask") ?? false;
+  }
+
   get token(){
     return canvas.tokens.controlled[0] ?? _levels.lastReleasedToken;
   }
@@ -122,6 +126,12 @@ class WeatherBlocker {
     Hooks.on("deleteDrawing", () => {
       game.WeatherBlocker.requestUpdate();
     });
+
+    Hooks.on("updateScene", (scene,updates) => {
+      if( updates.flags && WeatherBlocker.moduleName in updates.flags ){
+        game.WeatherBlocker.requestUpdate();
+      }
+    })
 
     if(!game.WeatherBlocker.integration) return;
 
