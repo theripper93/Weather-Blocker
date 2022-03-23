@@ -123,35 +123,31 @@ class WeatherBlocker {
       game.WeatherBlocker.requestUpdate();
     });
 
+    if(!game.WeatherBlocker.integration) return;
+
     Hooks.on("createTile", () => {
-      if(!game.WeatherBlocker.integration) return;
       game.WeatherBlocker.requestUpdate();
     });
     
     Hooks.on("updateTile", () => {
-      if(!game.WeatherBlocker.integration) return;
       game.WeatherBlocker.requestUpdate();
     });
     
     Hooks.on("deleteTile", () => {
-      if(!game.WeatherBlocker.integration) return;
       game.WeatherBlocker.requestUpdate();
     });
 
     Hooks.on("updateToken",(token,updates)=>{
-      if(!game.WeatherBlocker.integration) return;
       if("elevation" in updates || "x" in updates || "y" in updates){
         game.WeatherBlocker.requestUpdate();
       }
     })
 
     Hooks.on("controlToken", ()=>{
-      if(!game.WeatherBlocker.integration) return;
       game.WeatherBlocker.requestUpdate();
     })
 
     Hooks.on("sightRefresh", ()=>{
-      if(!game.WeatherBlocker.integration) return;
       game.WeatherBlocker.requestUpdate();
     })
 
