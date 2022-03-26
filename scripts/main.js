@@ -106,6 +106,8 @@ class WeatherBlocker {
     if (!tile.occluded && tile.alpha !== 0 && !tokenInTile) return false;
     if (!this.integration) return true;
 
+    if(!this.isLevels) return true;
+
     const { rangeBottom, rangeTop } = _levels.getFlagsForObject(tile);
     const underRoof =
       rangeTop == Infinity && token && token.data.elevation < rangeBottom;
