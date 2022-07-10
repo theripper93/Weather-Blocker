@@ -106,7 +106,7 @@ class WeatherBlocker {
     if (!tile.occluded && tile.alpha !== 0 && !tokenInTile) return false;
     if (!this.integration) return true;
 
-    if(!this.isLevels) return true;
+    if (!this.isLevels) return true;
 
     const { rangeBottom, rangeTop } = _levels.getFlagsForObject(tile);
     const underRoof =
@@ -188,13 +188,16 @@ class WeatherBlocker {
   }
 
   adjustPolygonPoints(drawing) {
-    let globalPoints = [];
-    if (drawing.data.points.length != 0) {
-      drawing.data.points.forEach((p) => {
-        globalPoints.push(p[0] + drawing.x, p[1] + drawing.y);
-      });
+    let globalCoords = [];
+    if (drawing.document.shape.points.length != 0) {
+      for (let i = 0; i < drawing.document.shape.points.length; i += 2) {
+        globalCoords.push(
+          drawing.document.shape.points[i] + (drawing.x),
+          drawing.document.shape.points[i + 1] + (drawing.y)
+        );
+      }
     } else {
-      globalPoints = [
+      globalCoords = [
         drawing.x,
         drawing.y,
         drawing.x + drawing.width,
@@ -205,7 +208,7 @@ class WeatherBlocker {
         drawing.y + drawing.height,
       ];
     }
-    return globalPoints;
+    return globalCoords;
   }
 
   needUpdate() {
