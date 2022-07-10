@@ -100,7 +100,7 @@ class WeatherBlocker {
     if (!tile.roomPoly) return false;
     const token = this.token;
     const center = token
-      ? new PIXI.Point(token.data.x + token.w / 2, token.data.y + token.h / 2)
+      ? new PIXI.Point(token.document.x + token.w / 2, token.document.y + token.h / 2)
       : new PIXI.Point(0, 0);
     const tokenInTile = token && tile.roomPoly.contains(center.x, center.y);
     if (!tile.occluded && tile.alpha !== 0 && !tokenInTile) return false;
@@ -110,7 +110,7 @@ class WeatherBlocker {
 
     const { rangeBottom, rangeTop } = _levels.getFlagsForObject(tile);
     const underRoof =
-      rangeTop == Infinity && token && token.data.elevation < rangeBottom;
+      rangeTop == Infinity && token && token.document.elevation < rangeBottom;
     return underRoof;
   }
 
@@ -219,7 +219,7 @@ class WeatherBlocker {
     const flag =
       drawing.document.getFlag(WeatherBlocker.moduleName, "blockWeather") ||
       false;
-    return flag || drawing.data.text == "blockWeather";
+    return flag || drawing.document.text == "blockWeather";
   }
 }
 
