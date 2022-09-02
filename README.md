@@ -5,6 +5,8 @@
 
 Block weather effects through drawings
 
+## The module is no longer supported as of V10 Please use FX master instead.
+
 Just create a drawing(Only Polygons and Rectangles are supported), in the drawing configuration enable weather blocking
 
 ![image](https://user-images.githubusercontent.com/1346839/159341144-f9029ce4-4845-46ae-89ea-c2e9303092b2.png)
